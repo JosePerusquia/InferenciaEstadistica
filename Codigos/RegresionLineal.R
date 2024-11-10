@@ -15,6 +15,8 @@ library(car)
 library(lmtest)
 library(MASS)
 library(here)
+library(corrplot)
+library(GGally)
 ##########################################################################
 
 ##########################################################################
@@ -213,7 +215,7 @@ p+geom_line(data=df1,aes(x=x,y=y),col='skyblue')
 ##########################################################################
 
 ##########################################################################
-# Ejemplo de análisis de residuales
+# Ejemplo de análisis de residuales y regresión polinomial
 datos=read.table(here('Datos/datos.txt'),header = F)
 names(datos)=c('y','x')
 
@@ -484,4 +486,86 @@ ggplot(MeanRespOriginalPred,aes(x=x,y=y))+
   labs(x='x',y='y',title='95% Prediction Intervals')+
   theme_minimal()+
   theme(plot.title=element_text(size=10),axis.title = element_text(size=8))
+##########################################################################
 
+##########################################################################
+# Selección de variables 
+data(swiss)
+
+# Graficamos por pares
+ggpairs(swiss)
+
+# Selección hacia adelante no considera Examination
+res= lm(Fertility~1,swiss)
+summary(res)
+step.model = stepAIC(res, direction = "forward",
+                     scope=list(upper=~Agriculture+Education+Examination+
+                                  Catholic+Infant.Mortality))
+
+# Selección hacia atrás (coincide con el de selección hacia adelante)
+res= lm(Fertility~.,swiss)
+summary(res)
+step.model = stepAIC(res, direction = "backward")
+
+# Selección por segmentos (coincide también con los otros métodos)
+res= lm(Fertility~1,swiss)
+step.model = stepAIC(res, direction = "both",
+                     scope=list(upper=~Agriculture+Education+Examination+
+                                  Catholic+Infant.Mortality))
+
+# El mejor modelo
+res= lm(Fertility~Education+Catholic+Infant.Mortality+Agriculture,swiss)
+summary(res)
+
+# Análisis de residuales
+residuales = data.frame(x=res$fitted.values,y=res$residuals)
+
+# Supuestos de normalidad
+
+# histograma
+ggplot(data=residuales,aes(x=y))+
+  geom_histogram(breaks=hist(res$residuals,plot=F)$breaks,col='black',
+                 fill='skyblue2')+
+  labs(x='',y='')+
+  theme_minimal()
+
+# qqplot
+emp_quantiles=quantile(res$residuals,
+                       probs=seq(0.01,.99,length.out = length(res$residuals)))
+teo_quantiles=qnorm(seq(.025,.975,length.out = length(res$residuals)))
+
+x1=qnorm(.25)
+x2=qnorm(.75)
+y1=quantile(res$residuals,.25)
+y2=quantile(res$residuals,.75)
+
+m=(y2-y1)/(x2-x1)
+b=y1-m*x1
+
+quantiles=data.frame(emp_quantiles,teo_quantiles)
+names(quantiles)=c('Empirical','Theoretical')
+
+ggplot(quantiles,aes(x=Theoretical,y=Empirical))+
+  geom_point(col='black',size=2)+
+  geom_abline(intercept = b ,slope =m,col="red")+
+  labs(title='',x='Cuantiles Teóricos',y='Cuantiles Empíricos')+
+  theme_minimal()+
+  theme(axis.title =element_text(size=8))
+
+# Pruebas de normalidad
+lillie.test(res$residuals)
+ad.test(res$residuals)
+cvm.test(res$residuals)
+
+# Varianza constante
+ggplot(data=residuales,aes(x=x,y=y))+
+  geom_point()+
+  labs(x='Fitted values',y='Residuals')+
+  geom_hline(yintercept =0,col='red')+
+  theme_minimal()
+
+ncvTest(res)
+
+# No correlación
+dwtest(res)
+##########################################################################
