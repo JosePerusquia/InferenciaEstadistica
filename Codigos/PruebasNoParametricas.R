@@ -190,6 +190,12 @@ n = length(antes)
 binom.test(x,n,alternative='greater')
 
 # Como alternativa se tiene la prueba de rangos signados de Wilcoxon
+# Ejemplo accidentes antes y después de implementar programa de seguridad
+antes=c(51.2,46.5,24.1,10.2,65.3,92.1,30.3,49.2)
+despues=c(45.8,41.3,15.8,11.1,58.5,70.3,31.6,35.4)
+
+# A un nivel alpha=.05 se rechaza con signos, y no se rechaza con wilcoxon
+binom.test(6,8,alternative = 'g') 
 wilcox.test(antes,despues,alternative='greater',paired=T)
 
 ################################################################################
@@ -223,10 +229,22 @@ g4 = c(38,39,40,30,31,32,33,36,34,35)   # Sin tratamiento
 
 tratamientos = list(g1,g2,g3,g4)
 
-kruskal.test(tratamientos)
+# Se calcula el estadístico H y su p-valor
+ni=c(10,10,10,10)
+Ri_bar = unlist(lapply(tratamientos,sum))/ni;Ri_bar
+N=sum(ni)
 
-# Compara el estadístico con el cuantil de ji cuadrada con k-1 grados
+H=sum(12*ni*(Ri_bar-((N+1)/2))^2/(N*(N+1)));H
+p_value=pchisq(H,df=3,lower.tail=F);p_value
+
+#Alternativamente, se puede comparar con el percentil 1-alpha de la 
+# distribución ji-cuadrada de 3 grados de libertad
 qchisq(.95,3)
+
+
+# En R se utiliza el comando kruskal.test el cual recibe una lista con las
+# observaciones por grupo
+kruskal.test(tratamientos)
 
 ################################################################################
 
