@@ -3,7 +3,6 @@
 # Autor: Jose Antonio Perusquia Cortes
 # Afil : Facultad de Ciencias - UNAM
 # Curso : Inferencia estadística
-# Semestre: 2025 - I
 ##########################################################################
 
 ##########################################################################
@@ -112,8 +111,8 @@ A=matrix(data=c(1,2,3,4),nrow=2,byrow=T);A
 B=matrix(data=c(5,6,7,8),nrow=2,byrow=F);B
 
 # Otra forma de definirlas a partir de concatenación
-B=rbind(a,b);B # Unimos vectores como renglones 
-C=cbind(a,b);C # Unimos vectores como columnas 
+C=rbind(a,b);C # Unimos vectores como renglones 
+D=cbind(a,b);D # Unimos vectores como columnas 
 
 # Matriz transpuesta
 t(A)
@@ -164,7 +163,6 @@ eigen(A)
 
 ##########################################################################
 # Arreglos                                                      
-
 A=array(dim=c(2,2,4));A
 A[,,1]=B
 
@@ -249,7 +247,7 @@ moda=function(x){
 # Medidas de localizacion
 
 # cuantiles
-quantile(m,probs = seq(.05,1,by=.1))
+quantile(m,probs = c(.25,.5,.75))
 ##########################################################################
 
 ##########################################################################
@@ -275,7 +273,7 @@ cv=sd(m)/mean(m);cv
 ##########################################################################
 # Graficas para valores numéricos                                                     
 
-# Secuencia del 1 al 100 de 1 en 1
+# Secuencia del 1 al 10000 de 1 en 1
 t=seq(1,length(m),1)
 
 # Grafica 
@@ -335,3 +333,4 @@ pie(c(10,5,15),c('A','B','C'),radius=1)
 # Gráfica de barras
 barplot(c(10,5,15),names.arg=c('A','B','C'))
 ##########################################################################
+

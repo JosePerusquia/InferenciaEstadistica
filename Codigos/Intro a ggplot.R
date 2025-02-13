@@ -3,7 +3,6 @@
 # Autor: Jose Antonio Perusquia Cortes
 # Afil : Facultad de Ciencias - UNAM
 # Curso : Inferencia estadística
-# Semestre: 2025 - I
 ##########################################################################
 
 ##########################################################################
@@ -36,7 +35,7 @@ ggplot(x,aes(x=x))+
 ggplot(x,aes(x=x))+
   geom_histogram(stat="bin",color="black",fill="lightblue")+
   labs(x='',y='Frecuencias',title='Mi primer histograma')+
-  theme_minimal()
+  theme_economist_white()
 
 # Añadir la densidad gaussiana
 t=seq(-4,4,by=.01)
@@ -262,7 +261,3 @@ ggplot(data, aes(ymax=ymax, ymin=ymin, xmax=4, xmin=3, fill=category)) +
   theme_void() +
   labs(x="",y="",fill="Dosis (mg)")
 ##############################################################################
-
-
-
-
