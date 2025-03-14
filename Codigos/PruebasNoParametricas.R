@@ -1,5 +1,5 @@
 ################################################################################
-# Algunas pruebas no paramétricas                                            
+# Algunas pruebas no paramétricas                                         
 # Autor: Jose Antonio Perusquia Cortes
 # Afil: Facultad de Ciencias - UNAM
 # Curso: Modelos No Paramétricos y de Regresión
@@ -9,10 +9,9 @@
 # Librerías requeridas
 library(ggplot2)        # Versión 3.4.4
 library(ggthemes)       # Versión 5.0.0
-library(nortest)        # Versión 1.0.4 (Para pruebas de normalidad)
+library(nortest)        # Versión 1.0.4   (Para pruebas de normalidad)
 library(DescTools)      # Versión 0.99.56 (Para prueba de rachas)
 ################################################################################
-
 
 ################################################################################
 # Prueba de rachas para aleatoriedad
@@ -43,12 +42,18 @@ pruns = function(r,n1,n2,lower.tail=F){
   return(res)
 }
 
-
 # Prueba de dos colas para probar aleatoriedad vs no aleatoriedad
-runs = function(x,val=NULL,exact=F,alpha=.05,alpha.g=F,correct=F){
+runs = function(x,val=NULL,exact=T,alpha=.05,alpha.g=F,correct=T){
   
   # Si no se especifica el valor de referencia se utiliza la mediana
   if(is.null(val)){
+    val = median(x)
+    indices = which(x==median(x))
+    
+    if(length(indices)!=0){
+      x=x[-indices]
+    }
+    
     aux=x-median(x)
     r=sign(aux)
     
@@ -64,6 +69,12 @@ runs = function(x,val=NULL,exact=F,alpha=.05,alpha.g=F,correct=F){
     }
     
   }else{
+    indices = which(x==val)
+    
+    if(length(indices)!=0){
+      x=x[-indices]
+    }
+    
     aux=x-val
     r=sign(aux)
     
@@ -81,9 +92,8 @@ runs = function(x,val=NULL,exact=F,alpha=.05,alpha.g=F,correct=F){
   }
   
   
-  if(!exact){
-    
-    
+  if(exact){
+
     s=c(2:(n1+n2))
     alphaS=0
     
@@ -119,39 +129,52 @@ runs = function(x,val=NULL,exact=F,alpha=.05,alpha.g=F,correct=F){
     
     
   }else{
-
+    mean_R = 1+(2*n1*n1/(n1+n2))
+    var_R = 2*n1*n2*(2*n1*n2-n1-n2)/(((n1+n2)^2)*(n1+n2-1))
+    if(!correct){
+      Z = (no_runs-mean_R)/sqrt(var_R)
+      p_val = 2*pnorm(Z)
+    }else{
+      if(no_runs<mean_R){
+        c=.5
+      }else{
+        c=-.5
+      }
+      Z = (no_runs-mean_R+c)/sqrt(var_R)
+      p_val = 2*pnorm(Z)
+    }
+    L=list('z'=Z,'R'=no_runs,'n1'=n1,'n2'=n2,'p.value'=p_val)
   }
   
   return(L)
 }
 
 # Ejemplo pesos de las latas de pintura
-
 pesos_latas_pintura = c(68.2,71.6,69.3,71.6,70.4,65.0,63.6,64.7,
                         65.3,64.2,67.6,68.6,66.8,68.9,66.8,70.1)
 
-# Por default regresa la región más chica tal que la significancia es mayor
+# Por default regresa la región más chica tal que la significancia es menor
 # a la alpha especificada
 res = runs(pesos_latas_pintura);res
 
 # Se puede pedir que regrese la región más grande tal que la significancia 
-# es menor a la alpha especificada
+# es mayor a la alpha especificada
 res = runs(pesos_latas_pintura,alpha.g=T);res
 
-# La prueba asintótica aún no está funcional
+# La prueba asintótica con y sin corrección de continuidad
+res = runs(pesos_latas_pintura,exact=F,correct=F);res
+res = runs(pesos_latas_pintura,exact=F,correct=T);res
 
 # El caso n1!=n2 aún no está funcional
 
 # Alternativamente se puede resolver con la función RunsTest
 RunsTest(pesos_latas_pintura)
-
+RunsTest(pesos_latas_pintura,exact=F,correct=F)
+RunsTest(pesos_latas_pintura,exact=F,correct=T)
 ################################################################################
 
-
 ################################################################################
-# Prueba de signos 
-
-#########################      Prueba de mediana       ######################### 
+# Prueba de signos para la mediana
 
 # Ejemplo de rentas en la Ciudad de México
 rentas = c(4,15,14,8.5,15,14,5,19.5,14.9,6.7,7,
@@ -175,8 +198,10 @@ qbeta(.95,x+1,n-x)
 # Si la prueba es de cola derecha el intervalo superior es 1 y el inferior
 binom.test(x,n,alternative = 'greater')
 qbeta(.05,x,n-x+1)
+################################################################################
 
-#########################    2 muestras apareadas    #########################      
+################################################################################
+# Prueba de signos para dos muestras apareadas
 
 # Prueba de mediana = 0 en las diferencias
 
@@ -197,7 +222,6 @@ despues=c(45.8,41.3,15.8,11.1,58.5,70.3,31.6,35.4)
 # A un nivel alpha=.05 se rechaza con signos, y no se rechaza con wilcoxon
 binom.test(6,8,alternative = 'g') 
 wilcox.test(antes,despues,alternative='greater',paired=T)
-
 ################################################################################
 
 
@@ -214,7 +238,6 @@ res = wilcox.test(nativos,caucasicos);res
 # El estadístico original de Wilcoxon está dado por
 m = length(nativos)
 res$statistic+(m*(m+1)/2)
-
 ################################################################################
 
 
@@ -237,15 +260,13 @@ N=sum(ni)
 H=sum(12*ni*(Ri_bar-((N+1)/2))^2/(N*(N+1)));H
 p_value=pchisq(H,df=3,lower.tail=F);p_value
 
-#Alternativamente, se puede comparar con el percentil 1-alpha de la 
+# Alternativamente, se puede comparar con el percentil 1-alpha de la 
 # distribución ji-cuadrada de 3 grados de libertad
 qchisq(.95,3)
-
 
 # En R se utiliza el comando kruskal.test el cual recibe una lista con las
 # observaciones por grupo
 kruskal.test(tratamientos)
-
 ################################################################################
 
 
@@ -260,22 +281,38 @@ p4 = c(30,33,28,27,32,36,26,32)
 
 datos = cbind(p1,p2,p3,p4)
 
+# Se calculan los rangos por renglón
+rangos=t(apply(datos, 1, rank));rangos
+
+# Suma de rangos por columna
+Ri=apply(rangos,2,sum);Ri
+
+# Cálculo del estadístico S
+n=8
+k=4
+S=sum((Ri-(n*(k+1)/2))^2);S
+
+# Cálculo del estadístico Q con empates
+correc = 12
+Q = 12*(k-1)*S/(n*k*(k^2-1)-correc);Q
+
+# Se compara contra una ji cuadrada de k-1
+qchisq(.95,k-1) 
+pchisq(Q,k-1,lower.tail = F)
+
+# Prueba de Friedman que regresa los mismos valores
 friedman.test(datos)
-
-# Se compara contra una ji cuadrada de k-1 grados de libertad
-qchisq(.95,3)
-
 ################################################################################
 
 
 ################################################################################
-# Medidas de asociación
+# Correlación de Pearson
 
 # Ejemplo Gibbons pag. 440.
 juez1 = c(1,5,9,7,4,6,8,2,3)
 juez2 = c(4,3,6,8,2,7,9,1,5)
 
-#########################  Correlación de Pearson     #########################
+# Prueba de correlación nula
 cor.test(juez1,juez2)
 
 # Los intervalos se obtienen con la transformación Z de Fisher donde
@@ -289,60 +326,53 @@ z_sup = z+qnorm(.975)/sqrt(n-3)
 
 r_inf = (exp(2*z_inf)-1)/(exp(2*z_inf)+1);r_inf
 r_sup = (exp(2*z_sup)-1)/(exp(2*z_sup)+1);r_sup
+################################################################################
 
-
-#########################       tau de Kendall        #########################
+################################################################################
+# tau de Kendall
 
 # con p valor exacto si n<50 y sin empates, de otra forma
 # se usa teoría asintótica para que se distribuya normal estándar
 cor.test(juez1,juez2,method='k')
 
 # Si se puede asumir normalidad se pueden crear intervalos de confianza
-# con la transformación Z de Fisher (Bonett and Wright,2000) aunque existen
-# otras formas de crear los intervalos (e.g. teoría as)
-r_k = cor(juez1,juez2,method='k')
-z = .5*log((1+r_k)/(1-r_k))
-n = length(juez1)
+# con la transformación Z de Fisher (Bonett and Wright, 2000) aunque existen
+# otras formas de crear los intervalos (e.g. teoría asintóticas o métodos
+# bootstrap)
 
-z_inf = z-qnorm(.975)*sqrt(.437/(n-4))
-z_sup = z+qnorm(.975)*sqrt(.437/(n-4))
+# La librería DescTools también proporciona métodos para calcular la 
+# tau de Kendall con y sin empates con la posibilidad de obtener intervalos
+# de confianza
+KendallTauA(juez1,juez2,conf.level = .95)
+KendallTauB(juez1,juez2,conf.level = .95)
+################################################################################
 
-r_inf = (exp(2*z_inf)-1)/(exp(2*z_inf)+1);r_inf
-r_sup = (exp(2*z_sup)-1)/(exp(2*z_sup)+1);r_sup
+################################################################################
+# rho de Spearman
 
-
-#########################       rho de Spearman        #########################
 # con p-valor usando algoritmo AS 89 si n<1290, de otra forma
 # se puede obtener mediante la aproximación t 
 cor.test(juez1,juez2,method='s',exact = T)
 cor.test(juez1,juez2,method='s',exact = F)
 
+# Pasos para construir el estimador
 r_s=cor(juez1,juez2,method='s')
 tstat = r_s*(sqrt((n-2)/(1-r_s^2)));tstat
 2*pt(tstat,7,lower.tail = F)
 
 # Si se puede asumir normalidad se pueden crear intervalos de confianza
 # con la transformación Z de Fisher (Bonett and Wright, 2000) aunque existen
-# otras formas de crear los intervalos
+# otras formas de crear los intervalos (e.g. teoría asintóticas o métodos
+# bootstrap)
 
-r_s = cor(juez1,juez2,method='s')
-z = .5*log((1+r_s)/(1-r_s))
-n = length(juez1)
-
-z_inf = z-qnorm(.975)*sqrt((1+(r_s^2/2))/(n-3))
-z_sup = z+qnorm(.975)*sqrt((1+(r_s^2/2))/(n-3))
-
-r_inf = (exp(2*z_inf)-1)/(exp(2*z_inf)+1);r_inf
-r_sup = (exp(2*z_sup)-1)/(exp(2*z_sup)+1);r_sup
-
-
+# La librería DescTools también permite calcular la rho de Spearman
+# junto con sus intervalos de confianza vía la transformación Z 
+SpearmanRho(juez1,juez2,conf.level = .95)
 ################################################################################
 
 
 ################################################################################
-# Prueba ji cuadrada
-
-#########################   Tablas de contingencia     #########################
+# Prueba ji cuadrada para tablas de contingencia
 
 # Ejemplo de tipo de vacunas contra enfermedad o no
 x = matrix(c(43,237,52,198,25,245,48,212,57,233),nrow=5,byrow=T)
@@ -373,17 +403,19 @@ qchisq(.95,4)
 
 # Equivalentemente existe la función chisq.test
 chisq.test(x)
+################################################################################
 
-
-################ Prueba exacta de Fisher (muestras pequeñas)  #################
+################################################################################
+# Prueba exacta de Fisher (muestras pequeñas
 
 # Ejemplo de la señora del té
 
 x = matrix(c(3,1,1,3),byrow=T,nrow=2)
 fisher.test(x,alternative='greater')
+################################################################################
 
-
-################  Bondad de ajuste  ################# 
+################################################################################
+# Prueba ji cuadradra para problema de bondad de ajuste
 
 # Ejemplo de número de defectos para 0,1,2,3,4,5,6 o más
 defectos = c(0,1,2,3,4,5,6)
@@ -427,8 +459,10 @@ Q = sum(((no_obs-esperados)^2)/esperados);Q
 
 # Comparamos contra una ji cuadrada de 3 grados de libertad
 qchisq(.95,3)
-################################################################################
 
+# Alternativamente se puede usar la prueba ji cuadrada
+chisq.test(no_obs,p=probs)
+################################################################################
 
 ################################################################################
 # Prueba de McNemar
@@ -439,9 +473,7 @@ datos = matrix(c(18,4,12,5),nrow=2,byrow=T)
 # Correct=True regresa la corrección de Yates
 mcnemar.test(datos)
 mcnemar.test(datos,correct=F)
-
 ################################################################################
-
 
 ################################################################################
 # Prueba de Kolmogorov - Smirnov
@@ -476,18 +508,17 @@ df1=data.frame(x=x,y=Fx)
 
 p+geom_line(data=df1,aes(x=x,y=y),col='red')
 
-
 # Prueba de KS
-
 Fn=seq(0,1,by=1/20)
 Fx=pnorm(pesos,mean=200,sd=sqrt(1225))
 
+# Estadistico de prueba
 Dn1=max(Fn[-1]-Fx);Dn1
 Dn2=max(Fx-Fn[-21]);Dn2
+Dn=max(Dn1,Dn2);Dn
 
+# Usando la prueba de Kolmogorov en R
 ks.test(pesos,'pnorm',200,sqrt(1225))
-
-
 ################################################################################
 
 
@@ -500,7 +531,8 @@ ks.test(pesos,'pnorm',200,sqrt(1225))
 df=data.frame(pesos)
 
 ggplot(data=df,aes(x=pesos))+
-  geom_histogram(breaks=hist(pesos,plot=F)$breaks,col='black',fill='lightblue')+
+  geom_histogram(breaks=hist(pesos,plot=F)$breaks,col='black',
+                 fill='lightblue')+
   theme_minimal()+
   labs(x='',y='')
 
