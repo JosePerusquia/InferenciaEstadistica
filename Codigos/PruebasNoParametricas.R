@@ -406,7 +406,7 @@ chisq.test(x)
 ################################################################################
 
 ################################################################################
-# Prueba exacta de Fisher (muestras pequeñas
+# Prueba exacta de Fisher (muestras pequeñas)
 
 # Ejemplo de la señora del té
 
@@ -525,25 +525,28 @@ ks.test(pesos,'pnorm',200,sqrt(1225))
 ################################################################################
 # Pruebas de normalidad
 
+# Ejemplo temperatura de un castor
+temp=beaver1$temp
+
 # Métodos gráficos
 
 # Histograma
-df=data.frame(pesos)
+df=data.frame(temp)
 
-ggplot(data=df,aes(x=pesos))+
-  geom_histogram(breaks=hist(pesos,plot=F)$breaks,col='black',
+ggplot(data=df,aes(x=temp))+
+  geom_histogram(breaks=hist(temp,plot=F)$breaks,col='black',
                  fill='lightblue')+
   theme_minimal()+
   labs(x='',y='')
 
 # qqplot
-emp_quantiles=quantile(pesos,probs=seq(0.01,.99,length.out = length(pesos)))
-teo_quantiles=qnorm(seq(.025,.975,length.out = length(pesos)))
+emp_quantiles=quantile(temp,probs=seq(0.01,.99,length.out = length(temp)))
+teo_quantiles=qnorm(seq(.025,.975,length.out = length(temp)))
 
 x1=qnorm(.25)
 x2=qnorm(.75)
-y1=quantile(pesos,.25)
-y2=quantile(pesos,.75)
+y1=quantile(temp,.25)
+y2=quantile(temp,.75)
 
 m=(y2-y1)/(x2-x1)
 b=y1-m*x1
@@ -561,12 +564,12 @@ q=ggplot(quantiles,aes(x=Theoretical,y=Empirical))+
 q
 
 # Lilliefors 
-lillie.test(pesos)
+lillie.test(temp)
 
 # Anderson - Darling
-ad.test(pesos)
+ad.test(temp)
 
 # Cramer - von Mises 
-cvm.test(pesos)
+cvm.test(temp)
 
 ################################################################################
