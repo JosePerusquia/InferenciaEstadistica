@@ -58,7 +58,7 @@ table(res$flag)
 ggplot(data = res,aes(x=n,y=xbarra,colour=as.factor(flag)))+
   geom_point(show.legend = F)+
   geom_segment(show.legend = F,x=n,xend=n,y=L,yend=U)+
-  geom_hline(yintercept = 2,col='red')+
+  geom_hline(yintercept = 2,col='skyblue')+
   scale_colour_manual(values=c('black','grey'))+
   theme_minimal()+
   ylim(c(min(L),max(U)))+
