@@ -1,18 +1,18 @@
-#####################################################################
+##################################################################
 # Runs test                                           
 # Author: Jose Antonio Perusquia Cortes
 # Afil: Facultad de Ciencias - UNAM
 # Module: Nonparametric statistical inference
-#####################################################################
+##################################################################
 
-#####################################################################
+##################################################################
 # Required libraries
 library(ggplot2)        # Versión 3.4.4
 library(ggthemes)       # Versión 5.0.0
 library(DescTools)      # Versión 0.99.56 (Para prueba de rachas)
-#####################################################################
+##################################################################
 
-#####################################################################
+##################################################################
 # Probability mass function and distribution functions
 # of the number of runs
 
@@ -104,9 +104,9 @@ num_runs = function(x,val=NULL){
   L=list('n1'=n1,'n2'=n2,'R'=no_runs)
   return(L)
 }
-#####################################################################
+##################################################################
 
-#####################################################################
+##################################################################
 # Men and women sitting order in the cinema (n1=n2)
 x=c(1,1,1,1,0,1,0,0,0,0)
 n=length(x)
@@ -134,9 +134,9 @@ ggplot(data=df_R,aes(x=x,y=y))+
 
 # Runs test in DescTools
 RunsTest(x,exact = T)
-#####################################################################
+##################################################################
 
-#####################################################################
+##################################################################
 # Men and women sitting order in the cinema (n1!=n2)
 x=c(1,1,1,0,1,0,0,0,0)
 n=length(x)
@@ -161,9 +161,9 @@ sum(pmf_R[which(pmf_R<=druns(r,n1,n2))])
 
 # Runs test in DescTools
 RunsTest(x,exact = T)
-#####################################################################
+##################################################################
 
-#####################################################################
+##################################################################
 # Paint cans 
 weights = c(69.60, 71.50, 73.08, 70.68, 71.16, 70.59, 70.95, 
             66.62, 74.47, 71.11, 71.15, 69.38, 72.44, 69.93,
@@ -188,16 +188,22 @@ ggplot(data=df_R,aes(x=x,y=y))+
   theme_minimal()
 
 # Runs test in DescTools
-RunsTest(weights)
+RunsTest(weights,exact=F)
 
 # Normal approximation without correction
-mu_r = 1+(2*n1*n1/(n1+n2))
-var_r = 2*n1*n2*(2*n1*n2-n1-n2)/(((n1+n2)^2)*(n1+n2-1))
+mu_r = 1+(2*n1*n2/(n1+n2))
+var_r = 2*n1*n2*((2*n1*n2)-n1-n2)/(((n1+n2)^2)*(n1+n2-1))
 z = (r-mu_r)/sqrt(var_r);z
+
+# p-value without correction
+2*pnorm(z,lower.tail=F)
 RunsTest(weights,exact=F,correct=F)
 
-# Normal approximation with correction of -.5 since r < mu_r
+# Normal approximation with correction of -.5 since r < mu_r 
+# if r > mu_r we shoudl add .5
 z = (r-.5-mu_r)/sqrt(var_r);z
+
+# p-value with correction
 2*pnorm(z,lower.tail=F)
 RunsTest(weights,exact=F,correct=T)
-################################################################################
+##################################################################
