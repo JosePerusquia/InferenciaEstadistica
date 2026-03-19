@@ -44,7 +44,8 @@ pruns = function(r,n1,n2,lower.tail=T){
     }
   }else{
     res=0
-    for(i in r:(n1+n2)){
+    rmax = 2*min(n1,n2) + as.integer(n1 != n2)
+    for(i in r:rmax){
       res=res+druns(i,n1,n2)
     }
   }
@@ -57,50 +58,29 @@ pruns = function(r,n1,n2,lower.tail=T){
 # val = reference value, if not provided it uses the median
 num_runs = function(x,val=NULL){
   
-  if(is.null(val)){
+  if(is.null(val)) {
     val = median(x)
-    indices = which(x==median(x))
-    
-    if(length(indices)!=0){
-      x=x[-indices]
-    }
-    
-    aux=x-median(x)
-    r=sign(aux)
-    
-    n1=sum(r==1)
-    n2=sum(r==-1)
-    
-    no_runs=1
-    
-    for(i in 2:length(r)){
-      if(r[i]!=r[i-1]){
-        no_runs=no_runs+1
-      }
-    }
-    
-  }else{
-    indices = which(x==val)
-    
-    if(length(indices)!=0){
-      x=x[-indices]
-    }
-    
-    aux=x-val
-    r=sign(aux)
-    
-    n1=sum(r==1)
-    n2=sum(r==-1)
-    
-    no_runs=1
-    
-    for(i in 2:length(r)){
-      if(r[i]!=r[i-1]){
-        no_runs=no_runs+1
-      }
-    }
-    
   }
+  
+  x = x[x != val]
+  r = sign(x - val)
+  
+  # For degenerate cases with r=0 or r=1
+  if(length(r) == 0) return(list(n1=0,n2=0,R=0))
+  if(length(r) == 1) return(list(n1=sum(r==1),n2=sum(r==-1),R=1))
+  
+  n1=sum(r==1)
+  n2=sum(r==-1)
+    
+  no_runs=1
+    
+  for(i in 2:length(r)){
+    if(r[i]!=r[i-1]){
+      no_runs=no_runs+1
+    }
+  }
+  
+
   L=list('n1'=n1,'n2'=n2,'R'=no_runs)
   return(L)
 }
@@ -109,14 +89,14 @@ num_runs = function(x,val=NULL){
 ##################################################################
 # Men and women sitting order in the cinema (n1=n2)
 x=c(1,1,1,1,0,1,0,0,0,0)
-n=length(x)
 res=num_runs(x,0.5);res
 n1=res$n1
 n2=res$n2
 r =res$R
+rmax = 2*min(n1,n2) + as.integer(n1 != n2)
 
 # Distribution for all the possible values of R
-sop_R = c(2:n);sop_R
+sop_R = c(2:rmax);sop_R
 pmf_R = sapply(sop_R,druns,n1,n2);pmf_R
 
 df_R = data.frame(x=sop_R,y=pmf_R)
@@ -132,21 +112,22 @@ ggplot(data=df_R,aes(x=x,y=y))+
 # Significance level for the rejection region {2,3,9,10}
 2*sum(pmf_R[1:2])
 
-# Runs test in DescTools
+# Runs test in DescTools and how it obtains p-value
 RunsTest(x,exact = T)
+pval = 2*pruns(4,n1,n2);pval
 ##################################################################
 
 ##################################################################
 # Men and women sitting order in the cinema (n1!=n2)
-x=c(1,1,1,0,1,0,0,0,0)
-n=length(x)
+x=c(1,0,0,0,0,1,0,0,0,0,0,0,0,0,1)
 res=num_runs(x,0.5);res
 n1=res$n1
 n2=res$n2
 r =res$R
+rmax = 2*min(n1,n2) + as.integer(n1 != n2)
 
 # Distribution for all the possible values of R
-sop_R = c(2:n);sop_R
+sop_R = c(2:rmax);sop_R
 pmf_R = sapply(sop_R,druns,n1,n2);pmf_R
 
 df_R = data.frame(x=sop_R,y=pmf_R)
@@ -159,8 +140,12 @@ ggplot(data=df_R,aes(x=x,y=y))+
 # p-value
 sum(pmf_R[which(pmf_R<=druns(r,n1,n2))])
 
-# Runs test in DescTools
+# Runs test in DescTools and how it obtains the p-value
 RunsTest(x,exact = T)
+
+mu_r = 1+(2*n1*n2/(n1+n2))
+extreme = abs(sop_R - mu_r) >= abs(r - mu_r)
+sum(pmf_R[extreme])
 ##################################################################
 
 ##################################################################
@@ -170,14 +155,14 @@ weights = c(69.60, 71.50, 73.08, 70.68, 71.16, 70.59, 70.95,
             65.93, 68.09, 71.03, 68.55, 70.75, 70.34, 72.93,
             66.42, 71.81, 70.36, 67.94, 69.61, 70.32, 73.11,
             70.94, 68.31)
-n=length(weights)
 res=num_runs(weights);res
 n1=res$n1
 n2=res$n2
 r =res$R
+rmax = 2*min(n1,n2) + as.integer(n1 != n2)
 
 # Distribution for all the possible values of R
-sop_R = c(2:n);sop_R
+sop_R = c(2:rmax);sop_R
 pmf_R = sapply(sop_R,druns,n1,n2);pmf_R
 
 df_R = data.frame(x=sop_R,y=pmf_R)
@@ -196,14 +181,14 @@ var_r = 2*n1*n2*((2*n1*n2)-n1-n2)/(((n1+n2)^2)*(n1+n2-1))
 z = (r-mu_r)/sqrt(var_r);z
 
 # p-value without correction
-2*pnorm(z,lower.tail=F)
+2*min(pnorm(z,lower.tail=F),pnorm(z,lower.tail=T))
 RunsTest(weights,exact=F,correct=F)
 
-# Normal approximation with correction of -.5 since r < mu_r 
-# if r > mu_r we shoudl add .5
+# Normal approximation with correction of -.5 since r > mu_r 
+# if r < mu_r we should add .5
 z = (r-.5-mu_r)/sqrt(var_r);z
 
 # p-value with correction
-2*pnorm(z,lower.tail=F)
+2*min(pnorm(z,lower.tail=F),pnorm(z,lower.tail=T))
 RunsTest(weights,exact=F,correct=T)
 ##################################################################
