@@ -140,8 +140,8 @@ stats_salaries = salariesUSD %>%
     Max = max(salary),
     IQR = IQR(salary),
     sesgo = Skew(salary),
-    curtosis = Kurt(salary)
-  )
+    curtosis = Kurt(salary))
+  
 stats_salaries
 
 # Histogram using frequencies
@@ -236,4 +236,5 @@ ggplot(data=salariesUSD,aes(y=experience_level,x = salary,
   geom_boxplot(col='black',show.legend = F)+
   theme_minimal()+
   labs(x="",y="")
+
 ####################################################################

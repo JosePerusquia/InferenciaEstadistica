@@ -1,5 +1,5 @@
 ##################################################################
-# Point estimation                                      
+# Rao-Blackwell unbiased estimation Poisson distribution                                      
 # Author:  Jose Antonio Perusquia Cortes
 # Afil:    Facultad de Ciencias - UNAM
 # Module:  Statistical inference
@@ -7,14 +7,17 @@
 
 ##################################################################
 # Libraries
-library(ggplot2)        # Versión 3.4.4
-library(ggthemes)       # Versión 5.0.0
+library(ggplot2)        # Versión 4.0.2
+library(ggthemes)       # Versión 5.2.0
 library(gganimate)      # Version 1.0.11
 library(gifski)         # Version 1.32.0-2
 ##################################################################
 
 ##################################################################
 # Point estimation of exp(-theta) where Xi ~ Poisson(theta)
+
+# True parameter
+lambda = 1
 
 # The sample size
 n=c(1:500)
@@ -38,23 +41,30 @@ for(i in 1:500){
 # Plot of the estimators for varying n
 df=data.frame(n,theta1,theta2)
 
-p=ggplot(data=df,aes(x=n))+
-    geom_line(aes(y=theta2),col='darkblue')+
-    geom_point(aes(y=theta1),size=.8)+
-    geom_hline(yintercept = exp(-1),col='red')+
-    labs(x=expression(n),y='')+
-    theme_minimal()
+p = ggplot(df, aes(x = n)) +
+  geom_line(aes(y = theta2), col = "darkblue") +
+  geom_point(aes(y = theta1), size = .8) +
+  geom_hline(yintercept = exp(-lambda), col = "darkred") +
+  labs(x = expression(n), y = "") +
+  theme_minimal()+
+  theme(axis.title.x = element_text(size = 11,face='bold'),
+        axis.title.y = element_text(size = 11,face='bold'),
+        axis.text.x = element_text(size=11,face='bold'),
+        axis.text.y = element_text(size=11,face='bold'))
 print(p)
 
-# Create gif
-p1=p+
-  transition_reveal(n)+
-  shadow_trail(distance = 0.01)
+ggsave('RB_Poisson.pdf',width = 6,
+       height = 4,device = cairo_pdf)
 
-animate(p1, width = 600, height = 400, fps = 20, duration = 10, 
-        renderer = gifski_renderer())
+# Create gif
+p1 = p +
+  transition_manual(n, cumulative = TRUE)
+
+animate(p1,width = 1000,height = 800,
+        fps = 20,duration = 10,renderer = gifski_renderer()
+)
 
 # Save as GIF
-anim_save("myFirstRaoBlackwellAnimation.gif", 
+anim_save("RaoBlacwellPoisson.gif", 
           animation = last_animation())
 ##################################################################
